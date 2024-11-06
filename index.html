@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Telegram Web App Form</title>
+    <style>
+        body {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.ready();
+                console.log("Telegram Web App initialized");
+
+                Telegram.WebApp.onEvent('themeChanged', () => {
+                    document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
+                    document.body.style.color = Telegram.WebApp.themeParams.text_color;
+                    console.log("Theme changed:", Telegram.WebApp.themeParams);
+                });
+            } else {
+                console.error("Telegram Web App not found. Ensure the script is correctly loaded.");
+            }
+        });
+
+        function handleSubmit() {
+            const userInput = document.getElementById("userInput").value;
+            if (Telegram.WebApp && Telegram.WebApp.sendData) {
+                Telegram.WebApp.sendData(userInput);
+            } else {
+                console.error("Telegram Web App sendData function is not available.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Enter Text</h1>
+        <input type="text" id="userInput" placeholder="Type anything..." />
+        <button onclick="handleSubmit()">Submit</button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,3 @@
+python-telegram-bot==20.3  # Compatible version
+Flask==2.3.3               # Flask for handling form data
+python-dotenv==1.0.0       # To load environment variables from .env
