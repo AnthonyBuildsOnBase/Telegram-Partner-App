@@ -49,16 +49,21 @@
                 console.error("Telegram Web App not found. Ensure the script is correctly loaded.");
             }
         });
-
         function handleSubmit() {
-            const userInput = document.getElementById("userInput").value;
-            if (Telegram.WebApp && Telegram.WebApp.sendData) {
-                Telegram.WebApp.sendData(JSON.stringify({ text: userInput }));
-                console.log("Data sent to bot:", userInput);
-            } else {
-                console.error("Telegram Web App sendData function is not available.");
-            }
+    const userInput = document.getElementById("userInput").value;
+    if (Telegram.WebApp && Telegram.WebApp.sendData) {
+        // Only send data if there's input
+        if (userInput.trim()) {
+            Telegram.WebApp.sendData(JSON.stringify({ text: userInput }));
+            console.log("Data sent to bot:", userInput);
+        } else {
+            alert("Please enter some text before submitting.");
         }
+    } else {
+        console.error("Telegram Web App sendData function is not available.");
+    }
+}
+
     </script>
 </head>
 <body>
