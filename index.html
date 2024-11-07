@@ -36,6 +36,7 @@
     </style>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // Check if the Telegram WebApp interface is available
             if (window.Telegram && Telegram.WebApp) {
                 Telegram.WebApp.ready();
                 console.log("Telegram Web App initialized");
@@ -49,21 +50,21 @@
                 console.error("Telegram Web App not found. Ensure the script is correctly loaded.");
             }
         });
-        function handleSubmit() {
-    const userInput = document.getElementById("userInput").value;
-    if (Telegram.WebApp && Telegram.WebApp.sendData) {
-        // Only send data if there's input
-        if (userInput.trim()) {
-            Telegram.WebApp.sendData(JSON.stringify({ text: userInput }));
-            console.log("Data sent to bot:", userInput);
-        } else {
-            alert("Please enter some text before submitting.");
-        }
-    } else {
-        console.error("Telegram Web App sendData function is not available.");
-    }
-}
 
+        function handleSubmit() {
+            const userInput = document.getElementById("userInput").value;
+            if (window.Telegram && Telegram.WebApp && Telegram.WebApp.sendData) {
+                if (userInput.trim()) {
+                    // Send data to the bot in JSON format
+                    Telegram.WebApp.sendData(JSON.stringify({ text: userInput }));
+                    console.log("Data sent to bot:", JSON.stringify({ text: userInput }));
+                } else {
+                    alert("Please enter some text before submitting.");
+                }
+            } else {
+                console.error("Telegram Web App sendData function is not available.");
+            }
+        }
     </script>
 </head>
 <body>
