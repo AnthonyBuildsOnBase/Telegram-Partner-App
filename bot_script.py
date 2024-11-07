@@ -1,9 +1,9 @@
 import os
 import logging
+import json
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 from dotenv import load_dotenv
-from threading import Thread
 
 # Load environment variables
 load_dotenv()
@@ -39,7 +39,8 @@ async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         web_app_data = update.message.web_app_data.data
         logging.debug(f"Web App data received: {web_app_data}")
         
-        data = eval(web_app_data)  # Parse the string data into a dict (use `json.loads` if using JSON)
+        # Parse the JSON data
+        data = json.loads(web_app_data)
         text = data.get("text")
 
         if not text:
@@ -62,9 +63,9 @@ application.add_handler(CommandHandler('start', start))
 application.add_handler(CommandHandler('form', form_command))
 application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data_handler))
 
-# Start the bot
+# Start the bot with polling
 if __name__ == '__main__':
-    logging.info("Starting Telegram bot")
+    logging.info("Starting Telegram bot with polling")
     try:
         application.run_polling()
     except KeyboardInterrupt:
