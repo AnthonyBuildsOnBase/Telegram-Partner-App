@@ -1,6 +1,6 @@
 import os
 import logging
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
@@ -26,28 +26,24 @@ application = ApplicationBuilder().token(BOT_API_KEY).build()
 # Define the /start command handler
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="Hello! I'm your bot. How can I assist you?")
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="Hello! I'm your bot. To request a form, say /form?")
     except Exception as e:
         logging.error(f"Error sending message: {e}")
 
-# Define the /form command handler
+# Define the /form command handler with inline keyboard button to open web app
 async def form_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=f"Please fill out the form here: {WEB_APP_URL}"
-        )
+        # Inline keyboard with a web_app type button to open the Mini App inline within Telegram
+        keyboard = [[InlineKeyboardButton("Open Form", web_app=WebAppInfo(WEB_APP_URL))]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await update.message.reply_text("Click below to open the form:", reply_markup=reply_markup)
     except Exception as e:
         logging.error(f"Error sending form link: {e}")
 
-# Define the /help command handler
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Get help here: t.me/Text_123_bot/Test_web_app")
-
 # Register command handlers
 application.add_handler(CommandHandler('start', start))
-application.add_handler(CommandHandler('form', form_command))  # Register /form command
-application.add_handler(CommandHandler('help', help_command))
+application.add_handler(CommandHandler('form', form_command))  # Updated /form command with web app button
 
 # Route for receiving data from the HTML form
 @app.route('/api/submit', methods=['POST'])
