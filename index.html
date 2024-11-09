@@ -46,11 +46,13 @@
         document.addEventListener("DOMContentLoaded", () => {
             if (window.Telegram && Telegram.WebApp) {
                 Telegram.WebApp.ready();
-                Telegram.WebApp.expand();  // Ensure full expansion on mobile
-                Telegram.WebApp.MainButton.show();  // Show the main button for interaction
+                
+                // Explicitly hide the main button if it appears
+                Telegram.WebApp.MainButton.hide();
+                Telegram.WebApp.expand();
 
                 console.log("Telegram Web App initialized");
-                
+
                 document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color || '#ffffff';
                 document.body.style.color = Telegram.WebApp.themeParams.text_color || '#000000';
 
@@ -59,13 +61,6 @@
                     document.body.style.color = Telegram.WebApp.themeParams.text_color;
                     console.log("Theme changed:", Telegram.WebApp.themeParams);
                 });
-
-                // Additional verification step for ready state
-                setTimeout(() => {
-                    if (!Telegram.WebApp.isExpanded) {
-                        console.warn("Telegram Web App did not expand as expected.");
-                    }
-                }, 1000);  // Check if expanded after 1 second
             } else {
                 console.error("Telegram Web App not found. Ensure the script is correctly loaded.");
                 alert("Telegram Web App interface could not be found. Please try reopening in Telegram.");
@@ -87,7 +82,7 @@
                     });
 
                     console.log("Preparing to send data to bot...");
-                    
+
                     setTimeout(() => {
                         try {
                             Telegram.WebApp.sendData(dataToSend);
