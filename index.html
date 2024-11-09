@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Telegram Web App Form</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Telegram Web App Form</title>
     <style>
         body {
             background-color: var(--tg-theme-bg-color, #ffffff);
@@ -12,34 +12,26 @@
             font-family: Arial, sans-serif;
             padding: 20px;
         }
-        .form-container, .card-container, .button-container {
+        .form-container {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-        input[type="text"], .card, button {
+        input[type="text"] {
             width: 100%;
             padding: 10px;
             font-size: 16px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
             border-radius: 4px;
         }
-        .card {
-            border: 1px solid var(--tg-theme-hint-color, #ccc);
-            padding: 15px;
-            background-color: #f9f9f9;
-        }
-        .button-container button {
+        button {
             padding: 10px;
             font-size: 16px;
+            background-color: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
-        }
-        .button-container button.add {
-            background-color: #4caf50;
-            color: white;
-        }
-        .button-container button.remove {
-            background-color: #f44336;
-            color: white;
         }
         .thank-you-message {
             margin-top: 15px;
@@ -47,6 +39,64 @@
             color: green;
         }
     </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.ready();
+                console.log("Telegram Web App initialized");
+
+                // Apply theme colors on load
+                document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color || '#ffffff';
+                document.body.style.color = Telegram.WebApp.themeParams.text_color || '#000000';
+
+                // Update colors on theme change
+                Telegram.WebApp.onEvent('themeChanged', () => {
+                    document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
+                    document.body.style.color = Telegram.WebApp.themeParams.text_color;
+                    console.log("Theme changed:", Telegram.WebApp.themeParams);
+                });
+            } else {
+                console.error("Telegram Web App not found. Ensure the script is correctly loaded.");
+            }
+        });
+
+        function handleSubmit() {
+            const usernameInput = document.getElementById("usernameInput").value;
+            const messageInput = document.getElementById("messageInput").value;
+            const thankYouMessage = document.getElementById("thankYouMessage");
+
+            // Clear any existing thank you message
+            thankYouMessage.innerHTML = "";
+
+            if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.sendData === "function") {
+                if (usernameInput.trim() && messageInput.trim()) {
+                    const dataToSend = {
+                        username: usernameInput.trim(),
+                        text: messageInput.trim()
+                    };
+
+                    console.log("Preparing to send data to bot...");
+                    
+                    // Add a slight delay to ensure readiness on mobile
+                    setTimeout(() => {
+                        try {
+                            Telegram.WebApp.sendData(JSON.stringify(dataToSend));
+                            console.log("Data sent to bot:", JSON.stringify(dataToSend));
+                            thankYouMessage.innerHTML = "Thank you! Your message has been sent.";  // Show thank you message
+                        } catch (error) {
+                            console.error("Error sending data:", error);
+                            thankYouMessage.innerHTML = "Failed to send message. Please try again.";
+                        }
+                    }, 100);  // 100ms delay
+                } else {
+                    alert("Please enter both username and message before submitting.");
+                }
+            } else {
+                console.error("Telegram Web App sendData function is not available.");
+                thankYouMessage.innerHTML = "Telegram Web App interface is not available. Please try on a supported device.";
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="form-container">
@@ -56,90 +106,5 @@
         <button onclick="handleSubmit()">Submit</button>
         <div id="thankYouMessage" class="thank-you-message"></div>
     </div>
-
-    <!-- Card and Button Components -->
-    <div class="card-container" id="cardContainer">
-        <!-- Example Card -->
-        <div class="card">
-            <h4 class="card-title">Item 1 - $10.00</h4>
-            <div class="button-container">
-                <button class="add" onclick="handleIncrement(this)">+</button>
-                <button class="remove" onclick="handleDecrement(this)" style="display:none;">-</button>
-            </div>
-            <span class="badge" style="display:none;">0</span>
-        </div>
-    </div>
-
-    <script>
-        // Initialize the Telegram Web App
-        document.addEventListener("DOMContentLoaded", () => {
-            if (window.Telegram && Telegram.WebApp) {
-                Telegram.WebApp.ready();
-                document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color || '#ffffff';
-                document.body.style.color = Telegram.WebApp.themeParams.text_color || '#000000';
-                Telegram.WebApp.onEvent('themeChanged', () => {
-                    document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
-                    document.body.style.color = Telegram.WebApp.themeParams.text_color;
-                });
-            } else {
-                console.error("Telegram Web App not found. Ensure the script is correctly loaded.");
-            }
-        });
-
-        // Form Submission Handler
-        function handleSubmit() {
-            const username = document.getElementById("usernameInput").value;
-            const message = document.getElementById("messageInput").value;
-            const thankYouMessage = document.getElementById("thankYouMessage");
-
-            thankYouMessage.innerHTML = "";  // Clear previous message
-            if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.sendData === "function") {
-                if (username.trim() && message.trim()) {
-                    const dataToSend = { username: username.trim(), text: message.trim() };
-                    setTimeout(() => {  // Slight delay for mobile readiness
-                        try {
-                            Telegram.WebApp.sendData(JSON.stringify(dataToSend));
-                            thankYouMessage.innerHTML = "Thank you! Your message has been sent.";
-                        } catch (error) {
-                            console.error("Error sending data:", error);
-                            thankYouMessage.innerHTML = "Failed to send message. Please try again.";
-                        }
-                    }, 100);
-                } else {
-                    alert("Please enter both username and message before submitting.");
-                }
-            } else {
-                console.error("Telegram Web App sendData function is not available.");
-                thankYouMessage.innerHTML = "Telegram Web App interface is not available. Please try on a supported device.";
-            }
-        }
-
-        // Increment Button Handler
-        function handleIncrement(button) {
-            const card = button.closest('.card');
-            const badge = card.querySelector('.badge');
-            let count = parseInt(badge.innerHTML) || 0;
-            badge.innerHTML = ++count;
-            badge.style.display = "inline";
-
-            // Show decrement button when count is positive
-            const decrementButton = card.querySelector('.remove');
-            decrementButton.style.display = count > 0 ? "inline" : "none";
-        }
-
-        // Decrement Button Handler
-        function handleDecrement(button) {
-            const card = button.closest('.card');
-            const badge = card.querySelector('.badge');
-            let count = parseInt(badge.innerHTML) || 0;
-            if (count > 0) badge.innerHTML = --count;
-
-            // Hide badge and decrement button if count reaches 0
-            if (count === 0) {
-                badge.style.display = "none";
-                button.style.display = "none";
-            }
-        }
-    </script>
 </body>
 </html>
