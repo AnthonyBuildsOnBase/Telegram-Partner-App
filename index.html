@@ -15,7 +15,7 @@
             debugPanel.scrollTop = debugPanel.scrollHeight;
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
+        function initializeApp() {
             logToScreen("Initializing Telegram Mini App...");
 
             // Notify Telegram the Mini App is ready
@@ -30,16 +30,26 @@
                 logToScreen("Theme changed to new colors.");
             });
 
-            // Set up the submit button in the Telegram UI
-            postEvent('web_app_setup_main_button', {
-                is_visible: true,
-                is_active: true,
-                text: "Submit"
-            });
+            // Attempt to set up the main button with a retry mechanism
+            setTimeout(() => {
+                try {
+                    postEvent('web_app_setup_main_button', {
+                        is_visible: true,
+                        is_active: true,
+                        text: "Submit"
+                    });
+                    logToScreen("Main button setup successfully.");
+                } catch (error) {
+                    logToScreen(`Error setting up main button: ${error.message}`);
+                }
+            }, 1000); // Adjust delay if needed
 
             // Handle MainButton click
-            on('main_button_pressed', handleSubmit);
-        });
+            on('main_button_pressed', () => {
+                logToScreen("Main button pressed");
+                handleSubmit();
+            });
+        }
 
         function handleSubmit() {
             const usernameInput = document.getElementById("usernameInput").value.trim();
@@ -51,17 +61,26 @@
             if (usernameInput && messageInput) {
                 const dataToSend = JSON.stringify({ username: usernameInput, text: messageInput });
                 logToScreen(`Sending data: ${dataToSend}`);
-                
-                postEvent('web_app_data_send', { data: dataToSend });
 
-                // Provide feedback and close app
-                thankYouMessage.innerHTML = "Thank you! Your message has been sent.";
-                setTimeout(() => postEvent('web_app_close'), 500);
+                try {
+                    postEvent('web_app_data_send', { data: dataToSend });
+                    logToScreen("Data sent successfully.");
+
+                    // Provide feedback and close app
+                    thankYouMessage.innerHTML = "Thank you! Your message has been sent.";
+                    setTimeout(() => postEvent('web_app_close'), 500);
+                } catch (error) {
+                    logToScreen(`Error sending data: ${error.message}`);
+                    alert("Failed to send message. Please check your connection and try again.");
+                    thankYouMessage.innerHTML = "Failed to send message. Please try again.";
+                }
             } else {
                 alert("Please enter both username and message before submitting.");
                 logToScreen("Missing username or message input.");
             }
         }
+
+        document.addEventListener("DOMContentLoaded", initializeApp);
     </script>
     <style>
         /* Your existing styles here */
