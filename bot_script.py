@@ -51,7 +51,6 @@ async def form_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Click below to open the form:", reply_markup=reply_markup)
 
 # Handler for data sent from the Web App
-# Handler for data sent from the Web App
 async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.debug(f"Received an update: {update.to_dict()}")
     try:

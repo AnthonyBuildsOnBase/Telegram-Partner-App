@@ -36,11 +36,16 @@
     </style>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Check if the Telegram WebApp interface is available
+            // Initialize Telegram Web App
             if (window.Telegram && Telegram.WebApp) {
                 Telegram.WebApp.ready();
                 console.log("Telegram Web App initialized");
 
+                // Set theme colors on load
+                document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color || '#ffffff';
+                document.body.style.color = Telegram.WebApp.themeParams.text_color || '#000000';
+
+                // Update theme colors when changed
                 Telegram.WebApp.onEvent('themeChanged', () => {
                     document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
                     document.body.style.color = Telegram.WebApp.themeParams.text_color;
@@ -56,18 +61,24 @@
             const messageInput = document.getElementById("messageInput").value;
             if (window.Telegram && Telegram.WebApp && Telegram.WebApp.sendData) {
                 if (usernameInput.trim() && messageInput.trim()) {
-                    // Send data to the bot in JSON format
+                    // Prepare data to send
                     const dataToSend = {
                         username: usernameInput.trim(),
                         text: messageInput.trim()
                     };
-                    Telegram.WebApp.sendData(JSON.stringify(dataToSend));
-                    console.log("Data sent to bot:", JSON.stringify(dataToSend));
+                    try {
+                        Telegram.WebApp.sendData(JSON.stringify(dataToSend));
+                        console.log("Data sent to bot:", JSON.stringify(dataToSend));
+                    } catch (error) {
+                        console.error("Error sending data:", error);
+                        alert("Failed to send data. Please try again.");
+                    }
                 } else {
                     alert("Please enter both username and message before submitting.");
                 }
             } else {
                 console.error("Telegram Web App sendData function is not available.");
+                alert("Telegram Web App interface is not available. Ensure you are using the app on a supported device.");
             }
         }
     </script>
