@@ -74,10 +74,6 @@
                 
                 Telegram.WebApp.ready();
                 Telegram.WebApp.expand();
-                const themeParams = Telegram.WebApp.themeParams;
-
-                document.body.style.backgroundColor = themeParams.bg_color || '#ffffff';
-                document.body.style.color = themeParams.text_color || '#000000';
 
                 if (Telegram.WebApp.MainButton) {
                     Telegram.WebApp.MainButton.setText("Submit");
@@ -88,6 +84,14 @@
                     logToScreen("MainButton not available on mobile.");
                 }
 
+                // Check if sendData is available on the device
+                if (typeof Telegram.WebApp.sendData === "function") {
+                    logToScreen("sendData function is available.");
+                } else {
+                    logToScreen("sendData function is NOT available. Retrying initialization...");
+                    setTimeout(initializeTelegramWebApp, 2000);
+                }
+                
                 Telegram.WebApp.onEvent('themeChanged', () => {
                     document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
                     document.body.style.color = Telegram.WebApp.themeParams.text_color;
@@ -108,7 +112,9 @@
 
         function handleSubmit() {
             logToScreen("Submit button clicked.");
-            
+
+            Telegram.WebApp.MainButton.offClick(handleSubmit);  // Reset button click event for re-attach
+
             const usernameInput = document.getElementById("usernameInput").value.trim();
             const messageInput = document.getElementById("messageInput").value.trim();
             const thankYouMessage = document.getElementById("thankYouMessage");
@@ -118,7 +124,6 @@
             if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.sendData === "function") {
                 if (usernameInput && messageInput) {
                     const dataToSend = JSON.stringify({ username: usernameInput, text: messageInput });
-
                     logToScreen(`Preparing to send data: ${dataToSend}`);
                     Telegram.WebApp.MainButton.showProgress();
 
@@ -133,9 +138,8 @@
                                 logToScreen("Web App closed after sending data.");
                             }, 500);
                         } catch (error) {
-                            console.error("Error sending data:", error);
+                            logToScreen("sendData error: " + error.message);
                             alert("Failed to send message. Please check your connection and try again.");
-                            logToScreen("Error sending data: " + error);
                             thankYouMessage.innerHTML = "Failed to send message. Please try again.";
                         } finally {
                             Telegram.WebApp.MainButton.hideProgress();
@@ -150,6 +154,9 @@
                 logToScreen("sendData function unavailable. Aborting.");
                 thankYouMessage.innerHTML = "Telegram Web App interface is unavailable.";
             }
+
+            // Restore MainButton click after execution
+            Telegram.WebApp.MainButton.onClick(handleSubmit);
         }
     </script>
 </head>
