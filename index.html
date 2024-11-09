@@ -59,7 +59,7 @@
             display: block;
         }
     </style>
-    <script>
+       <script>
         function logToScreen(message) {
             const debugPanel = document.getElementById("debugPanel");
             const logMessage = document.createElement("div");
@@ -68,30 +68,18 @@
             debugPanel.scrollTop = debugPanel.scrollHeight;
         }
 
-        function initializeTelegramWebApp() {
+        function initializeTelegramApp() {
             if (window.Telegram && Telegram.WebApp) {
                 logToScreen("Telegram Web App detected.");
-                
+
+                // Notify Telegram the app is ready
                 Telegram.WebApp.ready();
                 Telegram.WebApp.expand();
 
-                if (Telegram.WebApp.MainButton) {
-                    Telegram.WebApp.MainButton.setText("Submit");
-                    Telegram.WebApp.MainButton.show();
-                    Telegram.WebApp.MainButton.onClick(handleSubmit);
-                    logToScreen("Main button configured.");
-                } else {
-                    logToScreen("MainButton not available on mobile.");
-                }
+                // Initialize MainButton
+                setupMainButton();
 
-                // Check if sendData is available on the device
-                if (typeof Telegram.WebApp.sendData === "function") {
-                    logToScreen("sendData function is available.");
-                } else {
-                    logToScreen("sendData function is NOT available. Retrying initialization...");
-                    setTimeout(initializeTelegramWebApp, 2000);
-                }
-                
+                // Event listener for theme changes
                 Telegram.WebApp.onEvent('themeChanged', () => {
                     document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
                     document.body.style.color = Telegram.WebApp.themeParams.text_color;
@@ -100,51 +88,52 @@
 
                 logToScreen("Telegram Web App initialized successfully.");
             } else {
-                logToScreen("Telegram Web App is not available. Retrying...");
-                setTimeout(initializeTelegramWebApp, 2000);
+                logToScreen("Telegram Web App not available. Retrying...");
+                setTimeout(initializeTelegramApp, 2000);
             }
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            logToScreen("DOMContentLoaded event fired.");
-            initializeTelegramWebApp();
-        });
+        function setupMainButton() {
+            if (Telegram.WebApp.MainButton) {
+                Telegram.WebApp.MainButton.setText("Submit");
+                Telegram.WebApp.MainButton.show();
+                Telegram.WebApp.MainButton.onClick(handleSubmit);
+                logToScreen("Main button configured.");
+            } else {
+                logToScreen("MainButton not available on mobile.");
+            }
+        }
 
         function handleSubmit() {
             logToScreen("Submit button clicked.");
-
-            Telegram.WebApp.MainButton.offClick(handleSubmit);  // Reset button click event for re-attach
-
             const usernameInput = document.getElementById("usernameInput").value.trim();
             const messageInput = document.getElementById("messageInput").value.trim();
             const thankYouMessage = document.getElementById("thankYouMessage");
 
             thankYouMessage.innerHTML = "";
 
-            if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.sendData === "function") {
+            if (Telegram.WebApp && typeof Telegram.WebApp.sendData === "function") {
                 if (usernameInput && messageInput) {
                     const dataToSend = JSON.stringify({ username: usernameInput, text: messageInput });
                     logToScreen(`Preparing to send data: ${dataToSend}`);
                     Telegram.WebApp.MainButton.showProgress();
 
-                    setTimeout(() => {
-                        try {
-                            Telegram.WebApp.sendData(dataToSend);
-                            logToScreen("Data sent to bot: " + dataToSend);
-
-                            thankYouMessage.innerHTML = "Thank you! Your message has been sent.";
-                            setTimeout(() => {
-                                Telegram.WebApp.close();
-                                logToScreen("Web App closed after sending data.");
-                            }, 500);
-                        } catch (error) {
-                            logToScreen("sendData error: " + error.message);
-                            alert("Failed to send message. Please check your connection and try again.");
-                            thankYouMessage.innerHTML = "Failed to send message. Please try again.";
-                        } finally {
-                            Telegram.WebApp.MainButton.hideProgress();
-                        }
-                    }, 300);
+                    try {
+                        Telegram.WebApp.sendData(dataToSend);
+                        logToScreen("Data sent to bot: " + dataToSend);
+                        thankYouMessage.innerHTML = "Thank you! Your message has been sent.";
+                        
+                        setTimeout(() => {
+                            Telegram.WebApp.close();
+                            logToScreen("Web App closed after sending data.");
+                        }, 500);
+                    } catch (error) {
+                        logToScreen("sendData error: " + error.message);
+                        alert("Failed to send message. Please check your connection and try again.");
+                        thankYouMessage.innerHTML = "Failed to send message. Please try again.";
+                    } finally {
+                        Telegram.WebApp.MainButton.hideProgress();
+                    }
                 } else {
                     alert("Please enter both username and message before submitting.");
                     logToScreen("Missing username or message input.");
@@ -158,6 +147,11 @@
             // Restore MainButton click after execution
             Telegram.WebApp.MainButton.onClick(handleSubmit);
         }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            logToScreen("DOMContentLoaded event fired.");
+            initializeTelegramApp();
+        });
     </script>
 </head>
 <body>
