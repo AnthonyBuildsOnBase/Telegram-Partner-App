@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 BOT_API_KEY = os.getenv('TELEGRAM_API_TOKEN')
-WEB_APP_URL = os.getenv('WEB_APP_URL')
+WEB_APP_URL = "https://anthonybuildsonbase.github.io/Telegram-Partner-App/"
 
 # Set up logging
 logging.basicConfig(
@@ -50,7 +50,7 @@ async def form_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Click below to open the form:", reply_markup=reply_markup)
 
-# Handler for data sent from the Web App
+# Enhanced Web App Data Handler
 async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.debug(f"Received an update: {update.to_dict()}")
     try:
@@ -58,6 +58,8 @@ async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
         # Check if update contains web_app_data
         if update.message and update.message.web_app_data:
+            logging.info("Web App data received.")
+
             web_app_data = update.message.web_app_data.data
             logging.debug(f"Web App data received: {web_app_data}")
             
@@ -100,13 +102,19 @@ async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         logging.error(f"Error processing Web App data: {e}")
         await update.message.reply_text("An error occurred while processing your request.")
 
-
 # Register command handlers
 application.add_handler(CommandHandler('optin', optin))
 application.add_handler(CommandHandler('form', form_command))
 
 # Use filters.ALL to capture all types of messages and updates
 application.add_handler(MessageHandler(filters.ALL, web_app_data_handler))
+
+# Test handler to log messages for mobile debugging
+async def test_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logging.debug(f"Received a test message: {update.to_dict()}")
+    await update.message.reply_text("Debug: Message received on mobile")
+
+application.add_handler(CommandHandler('test', test_handler))
 
 # Start the bot with polling
 if __name__ == '__main__':
