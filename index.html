@@ -30,25 +30,20 @@
                 logToScreen("Theme changed to new colors.");
             });
 
-            // Attempt to set up the main button with a retry mechanism
-            setTimeout(() => {
-                try {
-                    postEvent('web_app_setup_main_button', {
-                        is_visible: true,
-                        is_active: true,
-                        text: "Submit"
-                    });
-                    logToScreen("Main button setup successfully.");
-                } catch (error) {
-                    logToScreen(`Error setting up main button: ${error.message}`);
-                }
-            }, 1000); // Adjust delay if needed
+            // Set up the main button in the Telegram UI
+            try {
+                postEvent('web_app_setup_main_button', {
+                    is_visible: true,
+                    is_active: true,
+                    text: "Submit"
+                });
+                logToScreen("Main button setup successfully.");
+            } catch (error) {
+                logToScreen(`Error setting up main button: ${error.message}`);
+            }
 
             // Handle MainButton click
-            on('main_button_pressed', () => {
-                logToScreen("Main button pressed");
-                handleSubmit();
-            });
+            on('main_button_pressed', handleSubmit);
         }
 
         function handleSubmit() {
@@ -135,16 +130,17 @@
         display: block;
     }
 </style>
-</head>
 <body>
     <div class="form-container">
         <h1>Send a Message</h1>
         <input type="text" id="usernameInput" placeholder="Enter username..." />
         <input type="text" id="messageInput" placeholder="Type your message..." />
+        <button onclick="handleSubmit()">Submit</button> <!-- Fallback HTML submit button -->
         <div id="thankYouMessage" class="thank-you-message"></div>
     </div>
     <div id="debugPanel" class="debug-panel">
         <h2>Debug Log</h2>
     </div>
 </body>
+</html>
 </html>
