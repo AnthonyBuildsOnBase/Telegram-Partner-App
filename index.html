@@ -60,6 +60,9 @@
         }
     </style>
     <script>
+        let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        let isInitialized = false;
+
         function logToScreen(message) {
             const debugPanel = document.getElementById("debugPanel");
             const logMessage = document.createElement("div");
@@ -71,27 +74,30 @@
         function initializeTelegramWebApp() {
             if (window.Telegram && Telegram.WebApp) {
                 logToScreen("Telegram Web App detected.");
-                
+
+                // Basic Telegram WebApp setup
                 Telegram.WebApp.ready();
                 Telegram.WebApp.expand();
 
+                // MainButton setup
                 if (Telegram.WebApp.MainButton) {
                     Telegram.WebApp.MainButton.setText("Submit");
                     Telegram.WebApp.MainButton.show();
                     Telegram.WebApp.MainButton.onClick(handleSubmit);
                     logToScreen("Main button configured.");
                 } else {
-                    logToScreen("MainButton not available on mobile.");
+                    logToScreen("MainButton not available.");
                 }
 
-                // Check if sendData is available on the device
+                // Check if sendData is available; retry if needed on mobile
                 if (typeof Telegram.WebApp.sendData === "function") {
+                    isInitialized = true;
                     logToScreen("sendData function is available.");
-                } else {
-                    logToScreen("sendData function is NOT available. Retrying initialization...");
-                    setTimeout(initializeTelegramWebApp, 2000);
+                } else if (isMobile) {
+                    logToScreen("sendData function is NOT available on mobile. Retrying initialization...");
+                    setTimeout(initializeTelegramWebApp, 2000);  // Retry initialization on mobile after delay
                 }
-                
+
                 Telegram.WebApp.onEvent('themeChanged', () => {
                     document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
                     document.body.style.color = Telegram.WebApp.themeParams.text_color;
@@ -111,9 +117,14 @@
         });
 
         function handleSubmit() {
-            logToScreen("Submit button clicked.");
+            if (!isInitialized) {
+                logToScreen("Telegram Web App is not fully initialized. Aborting submit.");
+                alert("App is not fully ready. Please try again in a moment.");
+                return;
+            }
 
-            Telegram.WebApp.MainButton.offClick(handleSubmit);  // Reset button click event for re-attach
+            logToScreen("Submit button clicked.");
+            Telegram.WebApp.MainButton.offClick(handleSubmit);
 
             const usernameInput = document.getElementById("usernameInput").value.trim();
             const messageInput = document.getElementById("messageInput").value.trim();
@@ -155,7 +166,6 @@
                 thankYouMessage.innerHTML = "Telegram Web App interface is unavailable.";
             }
 
-            // Restore MainButton click after execution
             Telegram.WebApp.MainButton.onClick(handleSubmit);
         }
     </script>
