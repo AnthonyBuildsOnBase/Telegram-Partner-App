@@ -68,45 +68,35 @@
             debugPanel.scrollTop = debugPanel.scrollHeight;
         }
 
-        let isReady = false;
-
-        function initializeTelegramWebApp() {
-            logToScreen("Attempting to initialize Telegram Web App...");
+        document.addEventListener("DOMContentLoaded", () => {
             if (window.Telegram && Telegram.WebApp) {
+                logToScreen("Initializing Telegram Web App...");
                 Telegram.WebApp.ready();
                 Telegram.WebApp.expand();
+
+                const themeParams = Telegram.WebApp.themeParams;
+                document.body.style.backgroundColor = themeParams.bg_color || '#ffffff';
+                document.body.style.color = themeParams.text_color || '#000000';
+
                 Telegram.WebApp.MainButton.setText("Submit");
                 Telegram.WebApp.MainButton.show();
-
-                logToScreen("Telegram Web App initialized successfully.");
-                document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color || '#ffffff';
-                document.body.style.color = Telegram.WebApp.themeParams.text_color || '#000000';
+                Telegram.WebApp.MainButton.onClick(handleSubmit);
 
                 Telegram.WebApp.onEvent('themeChanged', () => {
-                    document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
-                    document.body.style.color = Telegram.WebApp.themeParams.text_color;
+                    document.body.style.backgroundColor = themeParams.bg_color;
+                    document.body.style.color = themeParams.text_color;
                     logToScreen("Theme changed event detected.");
                 });
 
-                Telegram.WebApp.MainButton.onClick(handleSubmit);
-                isReady = true;
+                logToScreen("Telegram Web App initialized successfully.");
             } else {
-                setTimeout(initializeTelegramWebApp, 1500);
+                console.error("Telegram Web App is not available.");
             }
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            initializeTelegramWebApp();
         });
 
         function handleSubmit() {
             logToScreen("Submit button clicked.");
-            if (!isReady) {
-                alert("Telegram Web App is not ready. Please try again shortly.");
-                logToScreen("Telegram Web App is not ready. Aborting submission.");
-                return;
-            }
-
+            
             const usernameInput = document.getElementById("usernameInput").value.trim();
             const messageInput = document.getElementById("messageInput").value.trim();
             const thankYouMessage = document.getElementById("thankYouMessage");
