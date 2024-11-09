@@ -41,44 +41,85 @@
             font-size: 16px;
             color: green;
         }
+        /* Styling for the debug log panel */
+        .debug-panel {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            color: #333;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+        .debug-panel h2 {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
     </style>
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
+        // Debug logging function to display messages on-screen
+        function logToScreen(message) {
+            const debugPanel = document.getElementById("debugPanel");
+            const logMessage = document.createElement("div");
+            logMessage.textContent = message;
+            debugPanel.appendChild(logMessage);
+            debugPanel.scrollTop = debugPanel.scrollHeight; // Auto-scroll to latest log
+        }
+
+        let isReady = false;
+
+        function initializeTelegramWebApp() {
+            logToScreen("Attempting to initialize Telegram Web App...");
             if (window.Telegram && Telegram.WebApp) {
                 Telegram.WebApp.ready();
-
-                // Hide the main button to avoid displaying "Continue" on mobile
-                Telegram.WebApp.MainButton.hide();
-
-                // Verify if the Telegram Web App version supports necessary features
-                if (!Telegram.WebApp.isVersionAtLeast("6.0")) {
-                    Telegram.WebApp.showAlert("Your Telegram app version may be incompatible with this feature. Please update Telegram.");
-                    return;
-                }
+                Telegram.WebApp.expand();
+                Telegram.WebApp.MainButton.hide(); // Hide "Continue" button
+                
+                logToScreen("Telegram Web App initialized successfully.");
+                console.log("Telegram Web App initialized successfully.");
 
                 // Set theme colors
                 document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color || '#ffffff';
                 document.body.style.color = Telegram.WebApp.themeParams.text_color || '#000000';
+                logToScreen("Theme colors set.");
 
                 Telegram.WebApp.onEvent('themeChanged', () => {
                     document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
                     document.body.style.color = Telegram.WebApp.themeParams.text_color;
+                    logToScreen("Theme changed event detected.");
                 });
-                
-                console.log("Telegram Web App initialized on", Telegram.WebApp.platform);
+
+                isReady = true;
             } else {
-                alert("Telegram Web App interface is unavailable. Please reopen in Telegram.");
+                logToScreen("Telegram Web App interface is not available yet. Retrying...");
+                setTimeout(initializeTelegramWebApp, 300); // Retry initialization
             }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            logToScreen("DOM content loaded.");
+            initializeTelegramWebApp();
+
+            // Add explicit click event listener for better mobile compatibility
+            const submitButton = document.getElementById("submitButton");
+            submitButton.addEventListener("click", handleSubmit);
         });
 
         function handleSubmit() {
+            logToScreen("Submit button clicked.");
+            if (!isReady) {
+                alert("Telegram Web App is not ready. Please try again shortly.");
+                logToScreen("Telegram Web App is not ready. Aborting submission.");
+                return;
+            }
+
             const usernameInput = document.getElementById("usernameInput").value.trim();
             const messageInput = document.getElementById("messageInput").value.trim();
             const thankYouMessage = document.getElementById("thankYouMessage");
 
             thankYouMessage.innerHTML = "";
 
-            // Check if Telegram WebApp is available and can send data
             if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.sendData === "function") {
                 if (usernameInput && messageInput) {
                     const dataToSend = JSON.stringify({
@@ -86,30 +127,31 @@
                         text: messageInput
                     });
 
-                    console.log("Preparing to send data to bot...");
-
-                    // Display progress in case of delay
-                    Telegram.WebApp.MainButton.showProgress();
+                    logToScreen(`Preparing to send data: ${dataToSend}`);
+                    Telegram.WebApp.MainButton.showProgress(); // Show progress indicator
 
                     setTimeout(() => {
                         try {
                             Telegram.WebApp.sendData(dataToSend);
-                            console.log("Data sent to bot:", dataToSend);
+                            logToScreen("Data sent to bot: " + dataToSend);
                             thankYouMessage.innerHTML = "Thank you! Your message has been sent.";
                         } catch (error) {
                             console.error("Error sending data:", error);
                             alert("Failed to send message. Please check your connection and try again.");
+                            logToScreen("Error sending data: " + error);
                             thankYouMessage.innerHTML = "Failed to send message. Please try again.";
                         } finally {
                             Telegram.WebApp.MainButton.hideProgress();
                         }
-                    }, 500);  // Adjusted delay for mobile compatibility
+                    }, 500); // Adjusted delay for mobile compatibility
                 } else {
                     alert("Please enter both username and message before submitting.");
+                    logToScreen("Missing username or message input.");
                 }
             } else {
-                console.error("Telegram Web App sendData function is unavailable.");
+                console.error("Telegram Web App sendData function is not available.");
                 alert("Telegram Web App interface is unavailable. Please try reopening in Telegram.");
+                logToScreen("sendData function unavailable. Aborting.");
                 thankYouMessage.innerHTML = "Telegram Web App interface is unavailable. Please try on a supported device.";
             }
         }
@@ -120,8 +162,13 @@
         <h1>Send a Message</h1>
         <input type="text" id="usernameInput" placeholder="Enter username..." />
         <input type="text" id="messageInput" placeholder="Type your message..." />
-        <button onclick="handleSubmit()">Submit</button>
+        <button id="submitButton">Submit</button>
         <div id="thankYouMessage" class="thank-you-message"></div>
+    </div>
+
+    <!-- Debug log panel -->
+    <div id="debugPanel" class="debug-panel">
+        <h2>Debug Log</h2>
     </div>
 </body>
 </html>
