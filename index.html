@@ -52,14 +52,19 @@
         });
 
         function handleSubmit() {
-            const userInput = document.getElementById("userInput").value;
+            const usernameInput = document.getElementById("usernameInput").value;
+            const messageInput = document.getElementById("messageInput").value;
             if (window.Telegram && Telegram.WebApp && Telegram.WebApp.sendData) {
-                if (userInput.trim()) {
+                if (usernameInput.trim() && messageInput.trim()) {
                     // Send data to the bot in JSON format
-                    Telegram.WebApp.sendData(JSON.stringify({ text: userInput }));
-                    console.log("Data sent to bot:", JSON.stringify({ text: userInput }));
+                    const dataToSend = {
+                        username: usernameInput.trim(),
+                        text: messageInput.trim()
+                    };
+                    Telegram.WebApp.sendData(JSON.stringify(dataToSend));
+                    console.log("Data sent to bot:", JSON.stringify(dataToSend));
                 } else {
-                    alert("Please enter some text before submitting.");
+                    alert("Please enter both username and message before submitting.");
                 }
             } else {
                 console.error("Telegram Web App sendData function is not available.");
@@ -69,8 +74,9 @@
 </head>
 <body>
     <div class="form-container">
-        <h1>Enter Text</h1>
-        <input type="text" id="userInput" placeholder="Type anything..." />
+        <h1>Send a Message</h1>
+        <input type="text" id="usernameInput" placeholder="Enter username..." />
+        <input type="text" id="messageInput" placeholder="Type your message..." />
         <button onclick="handleSubmit()">Submit</button>
     </div>
 </body>
