@@ -46,24 +46,28 @@
         document.addEventListener("DOMContentLoaded", () => {
             if (window.Telegram && Telegram.WebApp) {
                 Telegram.WebApp.ready();
-                
-                // Explicitly hide the main button if it appears
+
+                // Hide the main button to avoid displaying "Continue" on mobile
                 Telegram.WebApp.MainButton.hide();
-                Telegram.WebApp.expand();
 
-                console.log("Telegram Web App initialized");
+                // Verify if the Telegram Web App version supports necessary features
+                if (!Telegram.WebApp.isVersionAtLeast("6.0")) {
+                    Telegram.WebApp.showAlert("Your Telegram app version may be incompatible with this feature. Please update Telegram.");
+                    return;
+                }
 
+                // Set theme colors
                 document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color || '#ffffff';
                 document.body.style.color = Telegram.WebApp.themeParams.text_color || '#000000';
 
                 Telegram.WebApp.onEvent('themeChanged', () => {
                     document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
                     document.body.style.color = Telegram.WebApp.themeParams.text_color;
-                    console.log("Theme changed:", Telegram.WebApp.themeParams);
                 });
+                
+                console.log("Telegram Web App initialized on", Telegram.WebApp.platform);
             } else {
-                console.error("Telegram Web App not found. Ensure the script is correctly loaded.");
-                alert("Telegram Web App interface could not be found. Please try reopening in Telegram.");
+                alert("Telegram Web App interface is unavailable. Please reopen in Telegram.");
             }
         });
 
@@ -74,6 +78,7 @@
 
             thankYouMessage.innerHTML = "";
 
+            // Check if Telegram WebApp is available and can send data
             if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.sendData === "function") {
                 if (usernameInput && messageInput) {
                     const dataToSend = JSON.stringify({
@@ -82,6 +87,9 @@
                     });
 
                     console.log("Preparing to send data to bot...");
+
+                    // Display progress in case of delay
+                    Telegram.WebApp.MainButton.showProgress();
 
                     setTimeout(() => {
                         try {
@@ -92,15 +100,17 @@
                             console.error("Error sending data:", error);
                             alert("Failed to send message. Please check your connection and try again.");
                             thankYouMessage.innerHTML = "Failed to send message. Please try again.";
+                        } finally {
+                            Telegram.WebApp.MainButton.hideProgress();
                         }
-                    }, 500);  // Adjusted delay for mobile
+                    }, 500);  // Adjusted delay for mobile compatibility
                 } else {
                     alert("Please enter both username and message before submitting.");
                 }
             } else {
-                console.error("Telegram Web App sendData function is not available.");
-                alert("Telegram Web App interface is not available. Please try reopening in Telegram.");
-                thankYouMessage.innerHTML = "Telegram Web App interface is not available. Please try on a supported device.";
+                console.error("Telegram Web App sendData function is unavailable.");
+                alert("Telegram Web App interface is unavailable. Please try reopening in Telegram.");
+                thankYouMessage.innerHTML = "Telegram Web App interface is unavailable. Please try on a supported device.";
             }
         }
     </script>
