@@ -56,7 +56,6 @@
             max-height: 150px;
             overflow-y: auto;
             font-size: 14px;
-            /* Set display to block for easier debugging */
             display: block;
         }
     </style>
@@ -71,27 +70,34 @@
 
         function initializeTelegramWebApp() {
             if (window.Telegram && Telegram.WebApp) {
+                logToScreen("Telegram Web App detected.");
+                
                 Telegram.WebApp.ready();
                 Telegram.WebApp.expand();
-
                 const themeParams = Telegram.WebApp.themeParams;
+
                 document.body.style.backgroundColor = themeParams.bg_color || '#ffffff';
                 document.body.style.color = themeParams.text_color || '#000000';
 
-                Telegram.WebApp.MainButton.setText("Submit");
-                Telegram.WebApp.MainButton.show();
-                Telegram.WebApp.MainButton.onClick(handleSubmit);
+                if (Telegram.WebApp.MainButton) {
+                    Telegram.WebApp.MainButton.setText("Submit");
+                    Telegram.WebApp.MainButton.show();
+                    Telegram.WebApp.MainButton.onClick(handleSubmit);
+                    logToScreen("Main button configured.");
+                } else {
+                    logToScreen("MainButton not available on mobile.");
+                }
 
                 Telegram.WebApp.onEvent('themeChanged', () => {
-                    document.body.style.backgroundColor = themeParams.bg_color;
-                    document.body.style.color = themeParams.text_color;
+                    document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
+                    document.body.style.color = Telegram.WebApp.themeParams.text_color;
                     logToScreen("Theme changed event detected.");
                 });
 
                 logToScreen("Telegram Web App initialized successfully.");
             } else {
                 logToScreen("Telegram Web App is not available. Retrying...");
-                setTimeout(initializeTelegramWebApp, 1000);
+                setTimeout(initializeTelegramWebApp, 2000);
             }
         }
 
@@ -134,7 +140,7 @@
                         } finally {
                             Telegram.WebApp.MainButton.hideProgress();
                         }
-                    }, 300); // Shorter delay for responsiveness
+                    }, 300);
                 } else {
                     alert("Please enter both username and message before submitting.");
                     logToScreen("Missing username or message input.");
