@@ -33,19 +33,23 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        .thank-you-message {
+            margin-top: 15px;
+            font-size: 16px;
+            color: green;
+        }
     </style>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Initialize Telegram Web App
             if (window.Telegram && Telegram.WebApp) {
                 Telegram.WebApp.ready();
                 console.log("Telegram Web App initialized");
 
-                // Set theme colors on load
+                // Apply theme colors on load
                 document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color || '#ffffff';
                 document.body.style.color = Telegram.WebApp.themeParams.text_color || '#000000';
 
-                // Update theme colors when changed
+                // Update colors on theme change
                 Telegram.WebApp.onEvent('themeChanged', () => {
                     document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
                     document.body.style.color = Telegram.WebApp.themeParams.text_color;
@@ -59,9 +63,13 @@
         function handleSubmit() {
             const usernameInput = document.getElementById("usernameInput").value;
             const messageInput = document.getElementById("messageInput").value;
+            const thankYouMessage = document.getElementById("thankYouMessage");
+
+            // Clear any existing thank you message
+            thankYouMessage.innerHTML = "";
+
             if (window.Telegram && Telegram.WebApp && Telegram.WebApp.sendData) {
                 if (usernameInput.trim() && messageInput.trim()) {
-                    // Prepare data to send
                     const dataToSend = {
                         username: usernameInput.trim(),
                         text: messageInput.trim()
@@ -69,16 +77,17 @@
                     try {
                         Telegram.WebApp.sendData(JSON.stringify(dataToSend));
                         console.log("Data sent to bot:", JSON.stringify(dataToSend));
+                        thankYouMessage.innerHTML = "Thank you! Your message has been sent.";  // Show thank you message
                     } catch (error) {
                         console.error("Error sending data:", error);
-                        alert("Failed to send data. Please try again.");
+                        thankYouMessage.innerHTML = "Failed to send message. Please try again.";
                     }
                 } else {
                     alert("Please enter both username and message before submitting.");
                 }
             } else {
                 console.error("Telegram Web App sendData function is not available.");
-                alert("Telegram Web App interface is not available. Ensure you are using the app on a supported device.");
+                thankYouMessage.innerHTML = "Telegram Web App interface is not available.";
             }
         }
     </script>
@@ -89,6 +98,7 @@
         <input type="text" id="usernameInput" placeholder="Enter username..." />
         <input type="text" id="messageInput" placeholder="Type your message..." />
         <button onclick="handleSubmit()">Submit</button>
+        <div id="thankYouMessage" class="thank-you-message"></div>
     </div>
 </body>
 </html>
