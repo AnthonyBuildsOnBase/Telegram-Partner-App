@@ -74,16 +74,20 @@
                         username: usernameInput.trim(),
                         text: messageInput.trim()
                     };
-                    try {
-                        // Debugging: Log before calling sendData
-                        console.log("Attempting to send data to bot...");
-                        Telegram.WebApp.sendData(JSON.stringify(dataToSend));
-                        console.log("Data sent to bot:", JSON.stringify(dataToSend));
-                        thankYouMessage.innerHTML = "Thank you! Your message has been sent.";  // Show thank you message
-                    } catch (error) {
-                        console.error("Error sending data:", error);
-                        thankYouMessage.innerHTML = "Failed to send message. Please try again.";
-                    }
+
+                    console.log("Preparing to send data to bot...");
+                    
+                    // Add a slight delay to ensure readiness on mobile
+                    setTimeout(() => {
+                        try {
+                            Telegram.WebApp.sendData(JSON.stringify(dataToSend));
+                            console.log("Data sent to bot:", JSON.stringify(dataToSend));
+                            thankYouMessage.innerHTML = "Thank you! Your message has been sent.";  // Show thank you message
+                        } catch (error) {
+                            console.error("Error sending data:", error);
+                            thankYouMessage.innerHTML = "Failed to send message. Please try again.";
+                        }
+                    }, 100);  // 100ms delay
                 } else {
                     alert("Please enter both username and message before submitting.");
                 }
