@@ -68,13 +68,15 @@
             // Clear any existing thank you message
             thankYouMessage.innerHTML = "";
 
-            if (window.Telegram && Telegram.WebApp && Telegram.WebApp.sendData) {
+            if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.sendData === "function") {
                 if (usernameInput.trim() && messageInput.trim()) {
                     const dataToSend = {
                         username: usernameInput.trim(),
                         text: messageInput.trim()
                     };
                     try {
+                        // Debugging: Log before calling sendData
+                        console.log("Attempting to send data to bot...");
                         Telegram.WebApp.sendData(JSON.stringify(dataToSend));
                         console.log("Data sent to bot:", JSON.stringify(dataToSend));
                         thankYouMessage.innerHTML = "Thank you! Your message has been sent.";  // Show thank you message
@@ -87,7 +89,7 @@
                 }
             } else {
                 console.error("Telegram Web App sendData function is not available.");
-                thankYouMessage.innerHTML = "Telegram Web App interface is not available.";
+                thankYouMessage.innerHTML = "Telegram Web App interface is not available. Please try on a supported device.";
             }
         }
     </script>
