@@ -74,8 +74,7 @@
         function initializeTelegramWebApp() {
             if (window.Telegram && Telegram.WebApp) {
                 logToScreen("Telegram Web App detected.");
-
-                // Basic Telegram WebApp setup
+                
                 Telegram.WebApp.ready();
                 Telegram.WebApp.expand();
 
@@ -89,10 +88,10 @@
                     logToScreen("MainButton not available.");
                 }
 
-                // Check if sendData is available; retry if needed on mobile
-                if (typeof Telegram.WebApp.sendData === "function") {
+                // Ensure compatibility across web, mobile, and desktop by checking for both sendData and receiveEvent functions
+                if (typeof Telegram.WebApp.sendData === "function" || (window.Telegram && Telegram.WebView && typeof Telegram.WebView.receiveEvent === "function")) {
                     isInitialized = true;
-                    logToScreen("sendData function is available.");
+                    logToScreen("Telegram Web App environment ready.");
                 } else if (isMobile) {
                     logToScreen("sendData function is NOT available on mobile. Retrying initialization...");
                     setTimeout(initializeTelegramWebApp, 2000);  // Retry initialization on mobile after delay

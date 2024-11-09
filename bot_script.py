@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 BOT_API_KEY = os.getenv('TELEGRAM_API_TOKEN')
-WEB_APP_URL = os.getenv('WEB_APP_URL')
+WEB_APP_URL = "https://anthonybuildsonbase.github.io/Telegram-Partner-App/"
 
 # Set up logging
 logging.basicConfig(
