@@ -74,10 +74,10 @@
             if (window.Telegram && Telegram.WebApp) {
                 Telegram.WebApp.ready();
                 Telegram.WebApp.expand();
-                Telegram.WebApp.MainButton.hide(); // Hide "Continue" button
-                
+                Telegram.WebApp.MainButton.setText("Submit");  // Set button text to "Submit"
+                Telegram.WebApp.MainButton.show();             // Show main button for submission
+
                 logToScreen("Telegram Web App initialized successfully.");
-                console.log("Telegram Web App initialized successfully.");
 
                 // Set theme colors
                 document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color || '#ffffff';
@@ -90,6 +90,8 @@
                     logToScreen("Theme changed event detected.");
                 });
 
+                // Attach main button event listener for data submission
+                Telegram.WebApp.MainButton.onClick(handleSubmit);
                 isReady = true;
             } else {
                 logToScreen("Telegram Web App interface is not available yet. Retrying...");
@@ -100,10 +102,6 @@
         document.addEventListener("DOMContentLoaded", () => {
             logToScreen("DOM content loaded.");
             initializeTelegramWebApp();
-
-            // Add explicit click event listener for better mobile compatibility
-            const submitButton = document.getElementById("submitButton");
-            submitButton.addEventListener("click", handleSubmit);
         });
 
         function handleSubmit() {
@@ -134,7 +132,13 @@
                         try {
                             Telegram.WebApp.sendData(dataToSend);
                             logToScreen("Data sent to bot: " + dataToSend);
+
+                            // Indicate success and close the Web App on mobile
                             thankYouMessage.innerHTML = "Thank you! Your message has been sent.";
+                            setTimeout(() => {
+                                Telegram.WebApp.close();
+                                logToScreen("Web App closed after sending data.");
+                            }, 500);
                         } catch (error) {
                             console.error("Error sending data:", error);
                             alert("Failed to send message. Please check your connection and try again.");
@@ -162,7 +166,6 @@
         <h1>Send a Message</h1>
         <input type="text" id="usernameInput" placeholder="Enter username..." />
         <input type="text" id="messageInput" placeholder="Type your message..." />
-        <button id="submitButton">Submit</button>
         <div id="thankYouMessage" class="thank-you-message"></div>
     </div>
 
