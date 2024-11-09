@@ -95,7 +95,7 @@
                 isReady = true;
             } else {
                 logToScreen("Telegram Web App interface is not available yet. Retrying...");
-                setTimeout(initializeTelegramWebApp, 300); // Retry initialization
+                setTimeout(initializeTelegramWebApp, 1000); // Longer delay for mobile compatibility
             }
         }
 
