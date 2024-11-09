@@ -46,8 +46,11 @@
         document.addEventListener("DOMContentLoaded", () => {
             if (window.Telegram && Telegram.WebApp) {
                 Telegram.WebApp.ready();
-                console.log("Telegram Web App initialized");
+                Telegram.WebApp.expand();  // Ensure full expansion on mobile
+                Telegram.WebApp.MainButton.show();  // Show the main button for interaction
 
+                console.log("Telegram Web App initialized");
+                
                 document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color || '#ffffff';
                 document.body.style.color = Telegram.WebApp.themeParams.text_color || '#000000';
 
@@ -56,8 +59,16 @@
                     document.body.style.color = Telegram.WebApp.themeParams.text_color;
                     console.log("Theme changed:", Telegram.WebApp.themeParams);
                 });
+
+                // Additional verification step for ready state
+                setTimeout(() => {
+                    if (!Telegram.WebApp.isExpanded) {
+                        console.warn("Telegram Web App did not expand as expected.");
+                    }
+                }, 1000);  // Check if expanded after 1 second
             } else {
                 console.error("Telegram Web App not found. Ensure the script is correctly loaded.");
+                alert("Telegram Web App interface could not be found. Please try reopening in Telegram.");
             }
         });
 
@@ -84,14 +95,16 @@
                             thankYouMessage.innerHTML = "Thank you! Your message has been sent.";
                         } catch (error) {
                             console.error("Error sending data:", error);
+                            alert("Failed to send message. Please check your connection and try again.");
                             thankYouMessage.innerHTML = "Failed to send message. Please try again.";
                         }
-                    }, 300);  // Adjusted delay for mobile
+                    }, 500);  // Adjusted delay for mobile
                 } else {
                     alert("Please enter both username and message before submitting.");
                 }
             } else {
                 console.error("Telegram Web App sendData function is not available.");
+                alert("Telegram Web App interface is not available. Please try reopening in Telegram.");
                 thankYouMessage.innerHTML = "Telegram Web App interface is not available. Please try on a supported device.";
             }
         }
