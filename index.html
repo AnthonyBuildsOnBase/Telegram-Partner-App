@@ -3,10 +3,63 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="HandheldFriendly" content="true">
     <title>Telegram Web App Form</title>
-    <script type="module">
-        import { on, postEvent } from '@telegram-apps/sdk';
-
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        .form-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: center;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 6px;
+        }
+        button {
+            padding: 15px;
+            font-size: 18px;
+            background-color: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .thank-you-message {
+            margin-top: 15px;
+            font-size: 16px;
+            color: green;
+            text-align: center;
+        }
+        .debug-panel {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            color: #333;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 14px;
+            display: block;
+        }
+    </style>
+    <script>
         function logToScreen(message) {
             const debugPanel = document.getElementById("debugPanel");
             const logMessage = document.createElement("div");
@@ -15,132 +68,108 @@
             debugPanel.scrollTop = debugPanel.scrollHeight;
         }
 
-        function initializeApp() {
-            logToScreen("Initializing Telegram Mini App...");
+        function initializeTelegramWebApp() {
+            if (window.Telegram && Telegram.WebApp) {
+                logToScreen("Telegram Web App detected.");
+                
+                Telegram.WebApp.ready();
+                Telegram.WebApp.expand();
 
-            // Notify Telegram the Mini App is ready
-            postEvent('web_app_ready');
-            postEvent('web_app_expand');
-            logToScreen("Web App expanded and ready.");
+                if (Telegram.WebApp.MainButton) {
+                    Telegram.WebApp.MainButton.setText("Submit");
+                    Telegram.WebApp.MainButton.show();
+                    Telegram.WebApp.MainButton.onClick(handleSubmit);
+                    logToScreen("Main button configured.");
+                } else {
+                    logToScreen("MainButton not available on mobile.");
+                }
 
-            // Set up theme change listener
-            on('theme_changed', payload => {
-                document.body.style.backgroundColor = payload.theme_params.bg_color;
-                document.body.style.color = payload.theme_params.text_color;
-                logToScreen("Theme changed to new colors.");
-            });
-
-            // Set up the main button in the Telegram UI
-            try {
-                postEvent('web_app_setup_main_button', {
-                    is_visible: true,
-                    is_active: true,
-                    text: "Submit"
+                // Check if sendData is available on the device
+                if (typeof Telegram.WebApp.sendData === "function") {
+                    logToScreen("sendData function is available.");
+                } else {
+                    logToScreen("sendData function is NOT available. Retrying initialization...");
+                    setTimeout(initializeTelegramWebApp, 2000);
+                }
+                
+                Telegram.WebApp.onEvent('themeChanged', () => {
+                    document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
+                    document.body.style.color = Telegram.WebApp.themeParams.text_color;
+                    logToScreen("Theme changed event detected.");
                 });
-                logToScreen("Main button setup successfully.");
-            } catch (error) {
-                logToScreen(`Error setting up main button: ${error.message}`);
-            }
 
-            // Handle MainButton click
-            on('main_button_pressed', handleSubmit);
+                logToScreen("Telegram Web App initialized successfully.");
+            } else {
+                logToScreen("Telegram Web App is not available. Retrying...");
+                setTimeout(initializeTelegramWebApp, 2000);
+            }
         }
 
+        document.addEventListener("DOMContentLoaded", () => {
+            logToScreen("DOMContentLoaded event fired.");
+            initializeTelegramWebApp();
+        });
+
         function handleSubmit() {
+            logToScreen("Submit button clicked.");
+
+            Telegram.WebApp.MainButton.offClick(handleSubmit);  // Reset button click event for re-attach
+
             const usernameInput = document.getElementById("usernameInput").value.trim();
             const messageInput = document.getElementById("messageInput").value.trim();
             const thankYouMessage = document.getElementById("thankYouMessage");
 
             thankYouMessage.innerHTML = "";
 
-            if (usernameInput && messageInput) {
-                const dataToSend = JSON.stringify({ username: usernameInput, text: messageInput });
-                logToScreen(`Sending data: ${dataToSend}`);
+            if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.sendData === "function") {
+                if (usernameInput && messageInput) {
+                    const dataToSend = JSON.stringify({ username: usernameInput, text: messageInput });
+                    logToScreen(`Preparing to send data: ${dataToSend}`);
+                    Telegram.WebApp.MainButton.showProgress();
 
-                try {
-                    postEvent('web_app_data_send', { data: dataToSend });
-                    logToScreen("Data sent successfully.");
+                    setTimeout(() => {
+                        try {
+                            Telegram.WebApp.sendData(dataToSend);
+                            logToScreen("Data sent to bot: " + dataToSend);
 
-                    // Provide feedback and close app
-                    thankYouMessage.innerHTML = "Thank you! Your message has been sent.";
-                    setTimeout(() => postEvent('web_app_close'), 500);
-                } catch (error) {
-                    logToScreen(`Error sending data: ${error.message}`);
-                    alert("Failed to send message. Please check your connection and try again.");
-                    thankYouMessage.innerHTML = "Failed to send message. Please try again.";
+                            thankYouMessage.innerHTML = "Thank you! Your message has been sent.";
+                            setTimeout(() => {
+                                Telegram.WebApp.close();
+                                logToScreen("Web App closed after sending data.");
+                            }, 500);
+                        } catch (error) {
+                            logToScreen("sendData error: " + error.message);
+                            alert("Failed to send message. Please check your connection and try again.");
+                            thankYouMessage.innerHTML = "Failed to send message. Please try again.";
+                        } finally {
+                            Telegram.WebApp.MainButton.hideProgress();
+                        }
+                    }, 300);
+                } else {
+                    alert("Please enter both username and message before submitting.");
+                    logToScreen("Missing username or message input.");
                 }
             } else {
-                alert("Please enter both username and message before submitting.");
-                logToScreen("Missing username or message input.");
+                alert("Telegram Web App interface is unavailable. Please try reopening in Telegram.");
+                logToScreen("sendData function unavailable. Aborting.");
+                thankYouMessage.innerHTML = "Telegram Web App interface is unavailable.";
             }
-        }
 
-        document.addEventListener("DOMContentLoaded", initializeApp);
+            // Restore MainButton click after execution
+            Telegram.WebApp.MainButton.onClick(handleSubmit);
+        }
     </script>
-<style>
-    body {
-        background-color: var(--tg-theme-bg-color, #ffffff);
-        color: var(--tg-theme-text-color, #000000);
-        font-family: Arial, sans-serif;
-        padding: 20px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        margin: 0;
-    }
-    .form-container {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        justify-content: center;
-    }
-    input[type="text"] {
-        width: 100%;
-        padding: 15px;
-        font-size: 18px;
-        border: 1px solid var(--tg-theme-hint-color, #ccc);
-        border-radius: 6px;
-    }
-    button {
-        padding: 15px;
-        font-size: 18px;
-        background-color: var(--tg-theme-button-color, #0088cc);
-        color: var(--tg-theme-button-text-color, #ffffff);
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-    }
-    .thank-you-message {
-        margin-top: 15px;
-        font-size: 16px;
-        color: green;
-        text-align: center;
-    }
-    .debug-panel {
-        margin-top: 20px;
-        padding: 10px;
-        border: 1px solid #ddd;
-        background-color: #f9f9f9;
-        color: #333;
-        max-height: 150px;
-        overflow-y: auto;
-        font-size: 14px;
-        display: block;
-    }
-</style>
+</head>
 <body>
     <div class="form-container">
         <h1>Send a Message</h1>
         <input type="text" id="usernameInput" placeholder="Enter username..." />
         <input type="text" id="messageInput" placeholder="Type your message..." />
-        <button onclick="handleSubmit()">Submit</button> <!-- Fallback HTML submit button -->
         <div id="thankYouMessage" class="thank-you-message"></div>
     </div>
+
     <div id="debugPanel" class="debug-panel">
         <h2>Debug Log</h2>
     </div>
 </body>
-</html>
 </html>
