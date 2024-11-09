@@ -56,7 +56,8 @@
             max-height: 150px;
             overflow-y: auto;
             font-size: 14px;
-            display: none; /* Hide debug panel on mobile by default */
+            /* Set display to block for easier debugging */
+            display: block;
         }
     </style>
     <script>
@@ -68,9 +69,8 @@
             debugPanel.scrollTop = debugPanel.scrollHeight;
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
+        function initializeTelegramWebApp() {
             if (window.Telegram && Telegram.WebApp) {
-                logToScreen("Initializing Telegram Web App...");
                 Telegram.WebApp.ready();
                 Telegram.WebApp.expand();
 
@@ -90,8 +90,14 @@
 
                 logToScreen("Telegram Web App initialized successfully.");
             } else {
-                console.error("Telegram Web App is not available.");
+                logToScreen("Telegram Web App is not available. Retrying...");
+                setTimeout(initializeTelegramWebApp, 1000);
             }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            logToScreen("DOMContentLoaded event fired.");
+            initializeTelegramWebApp();
         });
 
         function handleSubmit() {
